@@ -53,11 +53,16 @@ namespace dynfu {
 	{
 
 
-		group_size_ = std::min(group_size_, corr_.get_work_group_info<std::size_t>(q_.get_device(), CL_KERNEL_WORK_GROUP_SIZE));
-		std::cout << "Using group_size_" << std::endl;
-
 
 		if (numit_==0) throw std::logic_error("Must iterate at least once");
+
+		auto p=pf("pose_estimation");
+		corr_=p.create_kernel("correspondences");
+		parallel_sum_=p.create_kernel("parallel_sum");
+		serial_sum_=p.create_kernel("serial_sum");
+
+		group_size_ = std::min(group_size_, corr_.get_work_group_info<std::size_t>(q_.get_device(), CL_KERNEL_WORK_GROUP_SIZE));
+		std::cout << "Using group_size_" << group_size_ << std::endl;
 
 		if (group_size_==0) throw std::logic_error("Size of OpenCL parallel sum work groups must be at least 1");
 		auto frame_size=frame_width_*frame_height_;
@@ -80,10 +85,6 @@ namespace dynfu {
 		mats_=boost::compute::buffer(q_.get_context(),frame_size_after*sizeof_mats);
 		if ((frame_size_after%group_size_)==0) mats_output_=boost::compute::buffer(q_.get_context(),(frame_size_after/group_size_)*sizeof_mats);
 
-		auto p=pf("pose_estimation");
-		corr_=p.create_kernel("correspondences");
-		parallel_sum_=p.create_kernel("parallel_sum");
-		serial_sum_=p.create_kernel("serial_sum");
 
 		boost::compute::local_buffer<float> scratch(mats_floats*group_size_);
 
