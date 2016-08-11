@@ -52,6 +52,11 @@ namespace dynfu {
 			force_px_px_(force_px_px)
 	{
 
+
+		group_size_ = std::min(group_size_, corr_.get_work_group_info<std::size_t>(q_.get_device(), CL_KERNEL_WORK_GROUP_SIZE));
+		std::cout << "Using group_size_" << std::endl;
+
+
 		if (numit_==0) throw std::logic_error("Must iterate at least once");
 
 		if (group_size_==0) throw std::logic_error("Size of OpenCL parallel sum work groups must be at least 1");
